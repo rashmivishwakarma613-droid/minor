@@ -1,8 +1,11 @@
-from flask import Flask, render_template, jsonify, request, redirect
+from flask import Flask, render_template, jsonify, request, redirect, session
 import sqlite3
 import os
 
 app = Flask(__name__)
+
+app.secret_key = "secret123"
+ADMIN_EMAIL = "rashmivishwakarma613@gmail.com"  # 👉 apna email daalo
 
 # --- DATABASE CONNECTION ---
 def get_db_connection():
@@ -72,6 +75,7 @@ def login_user():
     conn.close()
 
     if user:
+        session['user'] = user['email']
         return redirect('/dashboard')
     else:
         return "❌ Invalid Email or Password"
@@ -82,13 +86,18 @@ def dashboard():
 
 @app.route('/analysis')
 def analysis():
-    return render_template('analysis.html')
+    is_admin = session.get('user') == ADMIN_EMAIL
+    return render_template('analysis.html', is_admin=is_admin)
 
 
 
 # ✅ DELETE QUESTION
 @app.route('/delete-question/<int:id>')
 def delete_question(id):
+
+    if session.get('user') != ADMIN_EMAIL:
+        return "❌ Access Denied"
+
     conn = get_db_connection()
     conn.execute("DELETE FROM questions WHERE id=?", (id,))
     conn.commit()
@@ -99,11 +108,15 @@ def delete_question(id):
 # ✅ ADD QUESTION PAGE
 @app.route('/add-question')
 def add_question_page():
+    if session.get('user') != ADMIN_EMAIL:
+        return "❌ Access Denied"
     return render_template('add_question.html')
 
 # ✅ SAVE QUESTION
 @app.route('/add-question', methods=['POST'])
 def save_question():
+    if session.get('user') != ADMIN_EMAIL:
+      return "❌ Access Denied"
     subject = request.form['subject']
     unit = request.form['unit']
     question = request.form['question']
@@ -121,6 +134,26 @@ def save_question():
     conn.close()
 
     return redirect('/dashboard')
+# ✅ UPDATE QUESTION (ALAG FUNCTION)
+@app.route('/update-question/<int:id>', methods=['POST'])
+def update_question(id):
+
+    if session.get('user') != ADMIN_EMAIL:
+        return "❌ Access Denied"
+
+    question = request.form['question']
+    answer = request.form['answer']
+
+    conn = get_db_connection()
+    conn.execute(
+        "UPDATE questions SET question=?, answer=? WHERE id=?",
+        (question, answer, id)
+    )
+    conn.commit()
+    conn.close()
+
+    return "Updated"
+
 
 # --- API ENDPOINTS ---
 
