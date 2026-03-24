@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, session
 import sqlite3
 import os
+import datetime   
 
 app = Flask(__name__)
 
@@ -22,12 +23,28 @@ def create_user_table():
             name TEXT,
             email TEXT UNIQUE,
             password TEXT
+
         )
     ''')
     conn.commit()
     conn.close()
 
 create_user_table()
+
+# --- CREATE LOG TABLE (👉 YE YAHAN AAYEGA) ---
+def create_log_table():
+    conn = get_db_connection()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT,
+            time TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+create_log_table()
 
 # --- ROUTES ---
 
@@ -73,12 +90,22 @@ def login_user():
         (email, password)
     ).fetchone()
     conn.close()
+    import datetime  
 
     if user:
-        session['user'] = user['email']
-        return redirect('/dashboard')
+      session['user'] = user['email']
+
+      conn = get_db_connection()
+      conn.execute(
+        "INSERT INTO logs (email, time) VALUES (?, ?)",
+        (email, str(datetime.datetime.now()))
+       )
+      conn.commit()
+      conn.close()
+
+      return redirect('/dashboard')
     else:
-        return "❌ Invalid Email or Password"
+      return "❌ Invalid Email or Password"
 
 @app.route('/dashboard')
 def dashboard():
@@ -88,6 +115,17 @@ def dashboard():
 def analysis():
     is_admin = session.get('user') == ADMIN_EMAIL
     return render_template('analysis.html', is_admin=is_admin)
+
+@app.route('/logs')
+def view_logs():
+    if session.get('user') != ADMIN_EMAIL:
+        return "❌ Access Denied"
+
+    conn = get_db_connection()
+    logs = conn.execute("SELECT * FROM logs ORDER BY id DESC").fetchall()
+    conn.close()
+
+    return render_template('logs.html', logs=logs)
 
 
 
