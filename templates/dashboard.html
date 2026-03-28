@@ -5,138 +5,219 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI-EDU Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <style>
-        .glass { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); }
-        body { background-color: #0f172a; color: white; font-family: sans-serif; }
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); }
         .hidden { display: none; }
+        /* Mobile touch improvement */
+        button:active { transform: scale(0.98); }
     </style>
 </head>
 
 <body class="min-h-screen p-4 pb-20">
 
-    <!-- ✅ NAVBAR -->
-    <nav class="flex justify-between items-center p-4 glass rounded-2xl mb-8">
-        <h1 class="text-xl font-bold text-blue-400">AI-EDU HUB</h1>
-
-        <div class="flex gap-3">
-            <!-- ✅ ADD QUESTION BUTTON -->
-            <a href="/add-question">
-                <button class="bg-green-600 px-4 py-1.5 rounded-full text-xs font-semibold">
-                    + Add Question
-                </button>
-            </a>
-
-            <!-- Language Button -->
-            <button id="langBtn" onclick="toggleLanguage()" class="bg-blue-600 px-4 py-1.5 rounded-full text-xs font-semibold">
-                Hindi / English
-            </button>
-        </div>
-    </nav>
-
-    <!-- YEAR SCREEN -->
-    <div id="year-screen" class="max-w-md mx-auto space-y-6">
-        <h2 class="text-2xl font-bold text-center">Select Your Year</h2>
-        <div class="grid gap-4">
-            <button onclick="showSemesters(1)" class="p-6 glass rounded-2xl text-xl font-bold">1st Year</button>
-            <button onclick="showSemesters(2)" class="p-6 glass rounded-2xl text-xl font-bold">2nd Year</button>
-            <button onclick="showSemesters(3)" class="p-6 glass rounded-2xl text-xl font-bold">3rd Year</button>
-            <button onclick="showSemesters(4)" class="p-6 glass rounded-2xl text-xl font-bold">4th Year</button>
-        </div>
+<nav class="flex justify-between items-center p-4 glass rounded-xl mb-6">
+    <h1 class="text-lg font-bold text-blue-400">AI ANALYZER</h1>
+    <div class="flex gap-2">
+        {% if session.user == "rashmivishwakarma613@gmail.com" %}
+        <a href="/admin" class="bg-yellow-600 px-3 py-1.5 rounded-lg text-xs">Admin</a>
+        {% endif %}
+        <a href="/logout" class="bg-red-600 px-3 py-1.5 rounded-lg text-xs">Logout</a>
     </div>
+</nav>
 
-    <!-- SEM SCREEN -->
-    <div id="sem-screen" class="hidden max-w-md mx-auto space-y-6">
-        <button onclick="switchScreen('year-screen')" class="text-blue-400">← Back</button>
-        <h2 class="text-2xl font-bold text-center">Select Semester</h2>
-        <div id="sem-buttons" class="grid gap-4"></div>
+<div id="year-screen" class="space-y-6">
+    <h2 class="text-2xl font-bold text-center">Select Year</h2>
+    <div class="grid grid-cols-1 gap-4">
+        <button onclick="showSemesters(1)" class="p-6 glass rounded-xl text-xl hover:bg-blue-600 transition">1st Year</button>
+        <button onclick="showSemesters(2)" class="p-6 glass rounded-xl text-xl hover:bg-blue-600 transition">2nd Year</button>
+        <button onclick="showSemesters(3)" class="p-6 glass rounded-xl text-xl hover:bg-blue-600 transition">3rd Year</button>
+        <button onclick="showSemesters(4)" class="p-6 glass rounded-xl text-xl hover:bg-blue-600 transition">4th Year</button>
     </div>
+</div>
 
-    <!-- SUBJECT SCREEN -->
-    <div id="subject-screen" class="hidden max-w-md mx-auto space-y-6">
-        <button onclick="switchScreen('sem-screen')" class="text-blue-400">← Back</button>
-        <h2 class="text-2xl font-bold text-center">Subjects</h2>
-        <div id="subject-list" class="grid gap-3"></div>
-    </div>
+<div id="sem-screen" class="hidden space-y-6">
+    <button onclick="switchScreen('year-screen')" class="text-blue-400">← Back to Years</button>
+    <h2 class="text-xl font-bold text-center">Select Semester</h2>
+    <div id="sem-buttons" class="grid grid-cols-2 gap-4"></div>
+</div>
 
-    <!-- UNIT SCREEN -->
-    <div id="unit-screen" class="hidden max-w-md mx-auto space-y-6">
+<div id="subject-screen" class="hidden space-y-6">
+    <button onclick="switchScreen('sem-screen')" class="text-blue-400">← Back to Semesters</button>
+    <h2 class="text-xl font-bold">Subjects</h2>
+    <div id="subject-list" class="grid gap-3"></div>
+</div>
+
+<div id="unit-screen" class="hidden space-y-6">
+    <div class="flex justify-between items-center">
         <button onclick="switchScreen('subject-screen')" class="text-blue-400">← Back</button>
-        <h2 id="unit-title-text" class="text-2xl font-bold text-center">Units</h2>
-        <div id="unit-list" class="grid gap-4"></div>
+        <button onclick="loadImportant()" class="bg-orange-600 px-4 py-2 rounded-lg font-bold animate-pulse">🔥 Important</button>
     </div>
+    
+    <h2 id="current-subject-title" class="text-xl font-bold text-blue-300">Units</h2>
+    <div id="unit-list" class="flex overflow-x-auto gap-2 pb-4 no-scrollbar"></div>
+
+    <hr class="border-gray-700">
+    <div id="questions-container" class="space-y-4">
+        <p class="text-center text-gray-500">Select a unit to see questions</p>
+    </div>
+</div>
 
 <script>
-function switchScreen(id) {
-    ['year-screen', 'sem-screen', 'subject-screen', 'unit-screen'].forEach(s => {
+let selectedSubject = "";
+let selectedUnit = "";
+
+function switchScreen(id){
+    ['year-screen','sem-screen','subject-screen','unit-screen'].forEach(s => {
         document.getElementById(s).classList.add('hidden');
     });
     document.getElementById(id).classList.remove('hidden');
+    window.scrollTo(0,0);
 }
 
-function showSemesters(year) {
+// 1. Show Semesters
+function showSemesters(year){
     const container = document.getElementById('sem-buttons');
-    container.innerHTML = '';
-
-    let sems = [year * 2 - 1, year * 2];
-
-    sems.forEach(num => {
-        const btn = document.createElement('button');
-        btn.className = "p-6 glass rounded-2xl text-xl font-bold";
-        btn.innerText = "Semester " + num;
-        btn.onclick = () => fetchSubjects(num);
+    container.innerHTML='';
+    let sems=[year*2-1, year*2];
+    sems.forEach(num=>{
+        const btn=document.createElement('button');
+        btn.className="p-6 glass rounded-xl font-bold hover:bg-blue-500 transition";
+        btn.innerText="Sem "+num;
+        btn.onclick=()=>fetchSubjects(num);
         container.appendChild(btn);
     });
-
     switchScreen('sem-screen');
 }
 
-function fetchSubjects(semNum) {
-    const list = document.getElementById('subject-list');
-    list.innerHTML = "Loading...";
+// 2. Fetch Subjects ccccccccccccc
+function fetchSubjects(semNum){
+    const list=document.getElementById('subject-list');
+    list.innerHTML="<p class='text-center'>Loading Subjects...</p>";
 
-    fetch("/api/subjects/Semester " + semNum)
-        .then(res => res.json())
-        .then(data => {
-            list.innerHTML = '';
-            data.forEach(sub => {
-                const b = document.createElement('button');
-                b.className = "p-5 glass rounded-xl text-left font-bold";
-                b.innerText = sub;
-                b.onclick = () => fetchUnits(sub);
-                list.appendChild(b);
-            });
-            switchScreen('subject-screen');
+    // Hum "Semester 1" bhej rahe hain
+    const semName = "Semester " + semNum;
+    
+    fetch("/api/subjects/" + encodeURIComponent(semName))
+    .then(res => res.json())
+    .then(data => {
+        list.innerHTML = '';
+        if(!data || data.length === 0){
+            list.innerHTML = `<p class='text-center text-red-400'>No subjects found for ${semName}. Check your Database!</p>`;
+            return;
+        }
+
+        data.forEach(sub => {
+            const b = document.createElement('button');
+            b.className = "p-4 glass rounded-xl text-left border-l-4 border-blue-500 hover:bg-blue-600 transition";
+            b.innerText = sub;
+            b.onclick = () => fetchUnits(sub);
+            list.appendChild(b);
         });
+        switchScreen('subject-screen');
+    });
 }
 
-function fetchUnits(subjectName) {
-    const list = document.getElementById('unit-list');
-    list.innerHTML = "Loading...";
+// 3. Fetch Units
+function fetchUnits(subject){
+    selectedSubject = subject;
+    document.getElementById('current-subject-title').innerText = subject;
+    const list=document.getElementById('unit-list');
+    list.innerHTML="Loading...";
 
-    fetch("/api/units/" + subjectName)
-        .then(res => res.json())
-        .then(units => {
-            list.innerHTML = '';
-
-            units.forEach(unit => {
-                const btn = document.createElement('button');
-                btn.className = "p-5 glass rounded-2xl";
-
-                btn.innerText = unit;
-
-                btn.onclick = () => {
-                    window.location.href = `/analysis?subject=${encodeURIComponent(subjectName)}&unit=${encodeURIComponent(unit)}`;
-                };
-
-                list.appendChild(btn);
-            });
-
-            switchScreen('unit-screen');
+    fetch("/api/units/"+encodeURIComponent(subject))
+    .then(res=>res.json())
+    .then(units=>{
+        list.innerHTML='';
+        units.forEach(unit=>{
+            const btn=document.createElement('button');
+            btn.className="px-4 py-2 glass rounded-full whitespace-nowrap text-sm border border-blue-500/30";
+            btn.innerText=unit;
+            btn.onclick=()=> {
+                // Highlight active unit
+                document.querySelectorAll('#unit-list button').forEach(b => b.classList.replace('bg-blue-600', 'glass'));
+                btn.classList.replace('glass', 'bg-blue-600');
+                fetchQuestions(subject, unit);
+            };
+            list.appendChild(btn);
         });
+        document.getElementById('questions-container').innerHTML = '<p class="text-center text-gray-400 mt-10">Select a unit above</p>';
+        switchScreen('unit-screen');
+    });
+}
+
+// 4. Fetch Normal Questions
+function fetchQuestions(subject, unit){
+    selectedUnit = unit;
+    const container=document.getElementById('questions-container');
+    container.innerHTML="<p class='text-center'>Fetching Questions...</p>";
+
+    fetch(`/api/questions/${encodeURIComponent(subject)}/${encodeURIComponent(unit)}`)
+    .then(res=>res.json())
+    .then(data=>{
+        renderQuestions(data, false);
+    });
+}
+
+// 5. Fetch Important Questions
+function loadImportant(){
+    if(!selectedUnit){ alert("Pehle Unit select karein!"); return; }
+    const container=document.getElementById('questions-container');
+    container.innerHTML="<p class='text-center'>Finding Important Questions...</p>";
+
+    fetch(`/api/important/${encodeURIComponent(selectedSubject)}/${encodeURIComponent(selectedUnit)}`)
+    .then(res=>res.json())
+    .then(data=>{
+        renderQuestions(data, true);
+    });
+}
+
+// Helper to Display Questions
+function renderQuestions(data, isImportant){
+    const container=document.getElementById('questions-container');
+    container.innerHTML='';
+    
+    if(data.length === 0) {
+        container.innerHTML = `<div class="p-10 text-center text-gray-500">No ${isImportant ? 'important ' : ''}questions found for this unit.</div>`;
+        return;
+    }
+
+    data.forEach(q=>{
+        const div=document.createElement('div');
+        div.className=`w-full p-5 glass rounded-xl border-t-2 ${isImportant ? 'border-orange-500' : 'border-blue-500'}`;
+        
+        div.innerHTML=`
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-bold uppercase ${isImportant ? 'text-orange-400' : 'text-blue-400'}">
+                    ${isImportant ? '🔥 High Priority' : 'Question'}
+                </span>
+                <span class="text-xs bg-gray-800 px-2 py-1 rounded">Repeat: ${q.repeat}</span>
+            </div>
+            <p class="text-lg font-medium leading-tight">${q.q}</p>
+            
+            <div class="mt-4 flex items-center justify-between">
+                <button onclick="toggleAns(this)" class="text-sm bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/30">
+                    Show Answer
+                </button>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-400 uppercase">Probability</p>
+                    <p class="font-bold ${parseInt(q.probability) > 50 ? 'text-green-400' : 'text-yellow-400'}">${q.probability}</p>
+                </div>
+            </div>
+            <div class="hidden mt-4 p-4 bg-green-900/20 border-l-2 border-green-500 text-gray-200 text-sm">
+                <strong>Answer:</strong><br>${q.ans}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleAns(btn){
+    const ans = btn.parentElement.nextElementSibling;
+    ans.classList.toggle('hidden');
+    btn.innerText = ans.classList.contains('hidden') ? "Show Answer" : "Hide Answer";
 }
 </script>
-
-
 </body>
 </html>
+
