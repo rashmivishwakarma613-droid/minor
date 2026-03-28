@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white p-6">
+
+<h1 class="text-3xl font-bold mb-6 text-center">⚙️ Admin Dashboard</h1>
+
+<div class="grid md:grid-cols-2 gap-6">
+
+    <!-- USERS -->
+    <div class="bg-gray-800 p-6 rounded-xl text-center shadow-lg">
+        <h2 class="text-xl font-bold text-blue-400">👥 Total Users</h2>
+        <p class="text-4xl mt-3">{{ total_users }}</p>
+    </div>
+
+    <!-- LOGS -->
+    <div class="bg-gray-800 p-6 rounded-xl text-center shadow-lg">
+        <h2 class="text-xl font-bold text-green-400">📊 Active Logs</h2>
+        <p class="text-4xl mt-3">{{ total_logs }}</p>
+    </div>
+
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="mt-10 flex justify-center gap-4">
+
+    <a href="/logs">
+        <button class="bg-blue-600 px-5 py-3 rounded-lg hover:bg-blue-700">
+            📜 View Logs
+        </button>
+    </a>
+
+    <form action="/delete_logs" method="POST">
+        <button class="bg-red-600 px-5 py-3 rounded-lg hover:bg-red-700">
+            🗑 Delete Logs
+        </button>
+    </form>
+
+</div>
+
+</body>
+</html>
