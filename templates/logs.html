@@ -1,25 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Logs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+            font-family: sans-serif;
+        }
+        .glass {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+    </style>
 </head>
-<body>
 
-<h2>Login Activity</h2>
+<body class="p-6">
 
-<table border="1">
-<tr>
-    <th>Email</th>
-    <th>Time</th>
-</tr>
+    <!-- TITLE -->
+    <h2 class="text-3xl font-bold text-center mb-8 text-blue-400">
+        Login Activity
+    </h2>
 
-{% for log in logs %}
-<tr>
-    <td>{{ log.email }}</td>
-    <td>{{ log.time }}</td>
-</tr>
-{% endfor %}
+    <!-- TABLE CONTAINER -->
+    <div class="overflow-x-auto glass rounded-xl p-4">
 
+        <table class="w-full text-left border-collapse">
+    <tr>
+        <th>Email</th>
+        <th>Login</th>
+        <th>Logout</th>
+        <th>Action</th>
+    </tr>
+
+    {% for log in logs %}
+    <tr>
+        <td>{{ log.email }}</td>
+        <td>{{ log.login_time }}</td>
+        <td>{{ log.logout_time }}</td>
+        <td>
+            <a href="/delete_log/{{ log.id }}">🗑 Delete</a>
+            <a href="/restore_log/{{ log.id }}">♻️ Restore</a>
+        </td>
+    </tr>
+    {% endfor %}
 </table>
 
 </body>
