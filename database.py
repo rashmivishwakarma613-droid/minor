@@ -1,55 +1,70 @@
 import sqlite3
+import pandas as pd
+import os
 
-def create_db():
-    # 1. Database file se connect karein (Ye 'rgpv_data.db' naam ki file bana dega)
+def create_db_from_excel():
+    # Purani file delete karein taaki fresh start ho
+    if os.path.exists('rgpv_data.db'):
+        os.remove('rgpv_data.db')
+        print("🗑️ Old database deleted.")
+
     conn = sqlite3.connect('rgpv_data.db')
     cursor = conn.cursor()
 
-    # 2. Agar purani table hai toh use hata dein (Fresh start ke liye)
-    cursor.execute('DROP TABLE IF EXISTS questions')
+    # Tables Create Karein
+    cursor.execute("CREATE TABLE semesters (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)")
+    cursor.execute("CREATE TABLE subjects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, semester_id INTEGER)")
+    cursor.execute("CREATE TABLE units (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, subject_id INTEGER)")
+    cursor.execute("CREATE TABLE questions (id INTEGER PRIMARY KEY AUTOINCREMENT, question TEXT, answer TEXT, unit_id INTEGER, year INTEGER)")
 
-    # 3. Table Structure banayein
-    cursor.execute('''
-        CREATE TABLE questions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            subject TEXT,
-            unit TEXT,
-            question TEXT,
-            repeats TEXT,
-            probability TEXT,
-            answer TEXT
-        )
-    ''')
+    # Excel Load Karein
+    df = pd.read_excel("data.xlsx")
+    df.columns = [c.strip().lower() for c in df.columns]
+    df = df.ffill() # Empty cells ko bharta hai
 
-    # 4. Aapka Data (Yahan aap apne 30-30 sawal niche isi format mein add kar sakti hain)
-    # Format: ('Subject Name', 'Unit Number', 'Question Text', 'Years', 'Prob %', 'Detailed Answer')
-    questions_list = [
-        # --- MACHINE LEARNING - UNIT 1 ---
-        ('Machine Learning', 'Unit 1', 'What is Supervised Learning?', '2021, 2023, 2024', '95%', 'Supervised learning is a type of ML where the model is trained on labeled data...'),
-        ('Machine Learning', 'Unit 1', 'Explain Reinforcement Learning', '2020, 2022', '80%', 'It is an area of machine learning concerned with how intelligent agents ought to take actions...'),
-        ('Machine Learning', 'Unit 1', 'Difference between Classification and Regression', '2019, 2023', '85%', 'Classification predicts discrete labels, while Regression predicts continuous quantities...'),
+    sem_map = {}
+    sub_map = {}
+    unit_map = {}
+
+    for _, row in df.iterrows():
+        # Clean Data
+        sem_name = str(row['semester']).strip()
+        sub_name = str(row['subject']).strip()
+        unit_name = str(row['unit']).strip()
+        ques = str(row['question']).strip()
+        ans = str(row['answer']).strip()
+        year = int(row['year']) if not pd.isna(row['year']) else 0
+
+        # 1. Insert Semester
+        if sem_name not in sem_map:
+            cursor.execute("INSERT INTO semesters (name) VALUES (?)", (sem_name,))
+            sem_map[sem_name] = cursor.lastrowid
         
-        # --- MACHINE LEARNING - UNIT 2 ---
-        ('Machine Learning', 'Unit 2', 'What is a Decision Tree?', '2021, 2022', '75%', 'A decision tree is a non-parametric supervised learning method used for classification...'),
-        ('Machine Learning', 'Unit 2', 'Explain Overfitting and Underfitting', '2018, 2020, 2024', '90%', 'Overfitting happens when a model learns noise; Underfitting is when it cannot capture the trend...'),
+        sem_id = sem_map[sem_name]
 
-        # --- AAP YAHAN AUR BHI SUBJECTS/UNITS ADD KAR SAKTI HAIN ---
-        # ('Compiler Design', 'Unit 1', 'Question here...', '2023', '70%', 'Answer here...')
-    ]
+        # 2. Insert Subject (Sem_id ke saath check karein taaki subjects mix na hon)
+        sub_key = (sem_id, sub_name.lower())
+        if sub_key not in sub_map:
+            cursor.execute("INSERT INTO subjects (name, semester_id) VALUES (?, ?)", (sub_name, sem_id))
+            sub_map[sub_key] = cursor.lastrowid
+        
+        sub_id = sub_map[sub_key]
 
-    # 5. Data ko Database mein Insert karein
-    cursor.executemany('''
-        INSERT INTO questions (subject, unit, question, repeats, probability, answer) 
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', questions_list)
-    
-    # 6. Save karke close karein
+        # 3. Insert Unit
+        unit_key = (sub_id, unit_name.lower())
+        if unit_key not in unit_map:
+            cursor.execute("INSERT INTO units (name, subject_id) VALUES (?, ?)", (unit_name, sub_id))
+            unit_map[unit_key] = cursor.lastrowid
+        
+        unit_id = unit_map[unit_key]
+
+        # 4. Insert Question
+        cursor.execute("INSERT INTO questions (question, answer, unit_id, year) VALUES (?, ?, ?, ?)", 
+                       (ques, ans, unit_id, year))
+
     conn.commit()
     conn.close()
-    print("--------------------------------------------------")
-    print("SUCCESS: 'rgpv_data.db' ban gayi hai aur data load ho gaya hai!")
-    print("--------------------------------------------------")
+    print("✅ Database Freshly Updated! All 3 subjects in Sem 6 should be there.")
 
 if __name__ == "__main__":
-    create_db()
-    input("\nKaam ho gaya! Enter dabayein band karne ke liye...") # Ye line add karein
+    create_db_from_excel()
