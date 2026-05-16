@@ -15,10 +15,11 @@ ADMIN_EMAIL = "rashmivishwakarma613@gmail.com"
 
 def get_db_connection():
     conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="ROOT",
-        database="ai_exam_db"
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=os.getenv("MYSQLPORT")
     )
 
     return conn
