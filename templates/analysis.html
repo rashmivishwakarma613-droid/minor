@@ -1,112 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advance Analysis - AI-EDU</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .glass { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); }
-        body { background-color: #0f172a; color: white; font-family: sans-serif; }
-    </style>
-</head>
-<body class="min-h-screen p-4 pb-10">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Question Analysis</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
-    <div class="max-w-3xl mx-auto mb-8">
-        <button onclick="window.history.back()" class="text-blue-400 mb-4">
-            ← Back
-        </button>
-        <h1 id="page-title" class="text-3xl font-bold">Subject Analysis</h1>
-        <p id="page-subtitle" class="text-gray-400 mt-2 text-sm">Loading...</p>
-    </div>
-
-    <div id="questions-list" class="max-w-3xl mx-auto space-y-6"></div>
-
-<script>
-const isAdmin = "{{ is_admin }}" === "True";
-const urlParams = new URLSearchParams(window.location.search);
-const subject = urlParams.get('subject');
-const unit = urlParams.get('unit');
-
-if(subject && unit) {
-    document.getElementById('page-title').innerText = subject + " - " + unit;
-    fetchQuestions();
+<style>
+.glass {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
 }
+body {
+    background-color:#0f172a;
+    color:white;
+    font-family:sans-serif;
+}
+</style>
+</head>
 
-function fetchQuestions() {
-    const container = document.getElementById('questions-list');
-    container.innerHTML = "Loading...";
+<body class="min-h-screen p-3">
 
-    fetch(`/api/questions/${encodeURIComponent(subject)}/${encodeURIComponent(unit)}`)
-        .then(res => res.json())
-        .then(data => {
-            container.innerHTML = '';
-
-            if(data.length === 0) {
-                container.innerHTML = "No questions found";
-                return;
-            }
-
-            data.forEach((item, index) => {
-                container.innerHTML += `
-                <div class="glass p-6 rounded-2xl space-y-3">
-
-                    <h3 class="font-bold">${index+1}. ${item.q}</h3>
-
-                    <p>Repeats: ${item.repeats}</p>
-                    <p>Probability: ${item.prob}</p>
-
-                    <p>${item.ans}</p>
-
-                    <!-- ✅ NEW BUTTONS -->
-                    ${isAdmin ? `
-<div class="flex gap-3 mt-3">
-
-    <button onclick="deleteQ(${item.id})"
-        class="bg-red-600 px-3 py-1 rounded text-xs">
-        Delete
+<!-- HEADER -->
+<div class="max-w-3xl mx-auto mb-6">
+    <button onclick="window.history.back()" class="text-blue-400 mb-3">
+        ← Back
     </button>
 
-    <button onclick="editQ(${item.id}, \`${item.q}\`, \`${item.ans}\`)"
-        class="bg-yellow-500 px-3 py-1 rounded text-xs">
-        Edit
+    <h1 class="text-xl md:text-3xl font-bold">
+        📊 AI Question Paper Analysis
+    </h1>
+
+    <p class="text-gray-400 text-sm mt-2">
+        Fast • Secure • Mobile Friendly • Multi-user
+    </p>
+</div>
+
+<!-- ⚠️ IMPORTANT INSTRUCTION -->
+<div class="max-w-3xl mx-auto glass p-4 rounded-xl mb-6 text-sm text-yellow-300">
+    ⚠️ Upload yahan se nahi hoga (performance & security reason)
+
+    <br><br>
+    👉 Previous Question Papers yahan folder me daalo:
+    <br>
+
+    <span class="text-green-400 font-bold">
+        myproject/static/papers/computnetwork/cn2025june.jpg
+
+    </span>
+
+    <br><br>
+
+    👉 Example structure:
+    <pre class="text-xs text-gray-300 mt-2">
+static/papers/
+    DBMS/
+        cn2025june.jpg
+        2022.jpg
+    OS/
+        2020.jpg
+    </pre>
+
+    👉 Fir niche subject select karo aur Analyze button dabao
+</div>
+
+<!-- SUBJECT SELECT -->
+<div class="max-w-3xl mx-auto mb-4 flex flex-col md:flex-row gap-2">
+
+    <select id="subject" class="p-2 bg-gray-800 rounded">
+        <option value="">Select Subject</option>
+        <option value="DBMS">DBMS</option>
+        <option value="OS">Operating System</option>
+        <option value="CN">Computer Network</option>
+    </select>
+
+    <button onclick="loadAnalysis()" 
+        class="bg-blue-600 px-4 py-2 rounded">
+        Analyze
     </button>
 
 </div>
-` : ``}
 
-                </div>
-                `;
-            });
+<!-- LOADING -->
+<div id="loading" class="text-center hidden">Processing...</div>
 
-            document.getElementById('page-subtitle').innerText =
-                `Total ${data.length} questions`;
+<!-- RESULT -->
+<div id="result" class="max-w-3xl mx-auto space-y-4"></div>
+
+<script>
+
+function loadAnalysis(){
+    let subject = document.getElementById("subject").value;
+
+    if(!subject){
+        alert("Please select subject");
+        return;
+    }
+
+    document.getElementById("loading").classList.remove("hidden");
+    document.getElementById("result").innerHTML = "";
+
+    fetch(`/analyze-subject/${subject}`)
+    .then(res => res.json())
+    .then(data => {
+
+        let container = document.getElementById("result");
+        document.getElementById("loading").classList.add("hidden");
+
+        if(!data.questions || data.questions.length === 0){
+            container.innerHTML = "No questions found";
+            return;
+        }
+
+        data.questions.forEach((q, i) => {
+            container.innerHTML += `
+            <div class="glass p-4 rounded-xl">
+                <h3 class="font-bold">${i+1}. ${q.question_text}</h3>
+                <p class="text-sm">Unit: ${q.unit}</p>
+                <p class="text-sm">Repeat Count: ${q.repeat_count}</p>
+                <p class="text-sm text-green-400">${q.importance}</p>
+            </div>
+            `;
         });
-}
 
-function deleteQ(id) {
-    fetch(`/delete-question/${id}`)
-        .then(() => {
-            alert("Deleted!");
-            location.reload();
-        });
-}
-
-function editQ(id, oldQ, oldAns) {
-    let newQ = prompt("Edit Question:", oldQ);
-    let newAns = prompt("Edit Answer:", oldAns);
-
-    fetch(`/update-question/${id}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `question=${encodeURIComponent(newQ)}&answer=${encodeURIComponent(newAns)}`
-    }).then(() => {
-        alert("Updated!");
-        location.reload();
+    })
+    .catch(()=>{
+        document.getElementById("loading").classList.add("hidden");
+        alert("Error loading data");
     });
 }
+
 </script>
 
 </body>
