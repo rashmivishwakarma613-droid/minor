@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Add Question</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white p-10">
+
+<h1 class="text-2xl mb-5">Teacher Question Form</h1>
+
+<form id="teacherForm" class="space-y-3">
+
+    <input name="teacher_name" placeholder="Teacher Name" class="p-2 text-black w-full">
+
+    <!-- SEMESTER -->
+    <select id="semester" name="semester" class="p-2 text-black w-full" onchange="loadSubjects()">
+        <option value="">Select Semester</option>
+        <option value="Semester 1">Semester 1</option>
+        <option value="Semester 2">Semester 2</option>
+        <option value="Semester 3">Semester 3</option>
+        <option value="Semester 4">Semester 4</option>
+        <option value="Semester 5">Semester 5</option>
+        <option value="Semester 6">Semester 6</option>
+        <option value="Semester 7">Semester 7</option>
+        <option value="Semester 8">Semester 8</option>
+    </select>
+
+    <!-- SUBJECT -->
+    <select id="subject" name="subject" class="p-2 text-black w-full" onchange="loadUnits()">
+        <option value="">Select Subject</option>
+        
+    </select>
+
+    <!-- UNIT -->
+    <select id="unit" name="unit" class="p-2 text-black w-full">
+        <option value="">Select Unit</option>
+    </select>
+
+    <textarea name="question" placeholder="Question" class="p-2 text-black w-full"></textarea>
+
+    <button class="bg-blue-500 px-4 py-2">Send for Approval</button>
+</form>
+
+<script>
+const syllabus = {
+    "Semester 6": {
+        "Machine Learning": ["Unit 1","Unit 2","Unit 3","Unit 4","Unit 5"],
+        "Computer Network": ["Unit 1","Unit 2","Unit 3","Unit 4","Unit 5"]
+    },
+    "Semester 5": {
+        "DBMS": ["Unit 1","Unit 2","Unit 3","Unit 4"],
+        "OS": ["Unit 1","Unit 2","Unit 3"]
+    }
+};
+
+function loadSubjects() {
+    const sem = document.getElementById("semester").value;
+    const subject = document.getElementById("subject");
+
+    subject.innerHTML = "<option>Select Subject</option>";
+
+    if (syllabus[sem]) {
+        Object.keys(syllabus[sem]).forEach(sub => {
+            subject.innerHTML += `<option value="${sub}">${sub}</option>`;
+        });
+    }
+}
+
+function loadUnits() {
+    const sem = document.getElementById("semester").value;
+    const sub = document.getElementById("subject").value;
+    const unit = document.getElementById("unit");
+
+    unit.innerHTML = "<option>Select Unit</option>";
+
+    if (syllabus[sem] && syllabus[sem][sub]) {
+        syllabus[sem][sub].forEach(u => {
+            unit.innerHTML += `<option value="${u}">${u}</option>`;
+        });
+    }
+}
+
+// submit
+document.getElementById("teacherForm").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = Object.fromEntries(new FormData(e.target));
+
+    await fetch("/teacher/add-question", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(formData)
+    });
+
+    alert("Sent for approval");
+};
+</script>
+
+</body>
+</html>
