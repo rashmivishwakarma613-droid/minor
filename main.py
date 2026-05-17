@@ -409,17 +409,19 @@ def get_units(subject):
 def get_questions(subject, unit):
 
     conn = get_db_connection()
-
     cursor = conn.cursor(dictionary=True)
 
+    # Convert "Unit 1" -> "1"
+    unit_number = unit.replace("Unit ", "").strip()
+
     print("Subject:", subject)
-    print("Unit:", unit)
+    print("Unit:", unit_number)
 
     cursor.execute("""
         SELECT question, repeat_count
         FROM questions
         WHERE subject=%s AND unit=%s
-    """, (subject, unit))
+    """, (subject, unit_number))
 
     data = cursor.fetchall()
 
