@@ -418,10 +418,11 @@ def get_questions(subject, unit):
     print("Unit:", unit_number)
 
     cursor.execute("""
-        SELECT question, repeat_count
-        FROM questions
-        WHERE subject=%s AND unit=%s
-    """, (subject, unit_number))
+    SELECT question, repeat_count
+    FROM questions
+    WHERE LOWER(subject)=LOWER(%s)
+    AND (unit=%s OR unit=%s)
+""", (subject.strip(), unit, unit.replace("Unit ", "").strip()))
 
     data = cursor.fetchall()
 
