@@ -421,7 +421,7 @@ def get_questions(subject, unit):
     SELECT question, repeat_count
     FROM questions
     WHERE LOWER(subject)=LOWER(%s)
-    AND (unit=%s OR unit=%s)
+    AND (LOWER(unit)=LOWER(%s) OR LOWER(unit)=LOWER(%s))
 """, (subject.strip(), unit, unit.replace("Unit ", "").strip()))
 
     data = cursor.fetchall()
