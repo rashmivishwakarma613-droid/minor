@@ -140,7 +140,7 @@ def seed_data():
         if not subject:
 
             cursor.execute(
-                "INSERT INTO subjects (semester, name) VALUES ?, ?)",
+                "INSERT INTO subjects (semester, name) VALUES (?, ?)"
                 (sem, sub)
             )
 
@@ -186,7 +186,7 @@ def teacher_add_question():
     cursor.execute("""
         INSERT INTO pending_questions 
         (teacher_name, year, semester, subject, unit, question)
-        VALUES (%s,%s,%s,%s,%s,%s)
+        VALUES (?, ?, ?, ?)
     """, (
         data['teacher_name'],
         data['year'],
@@ -234,7 +234,7 @@ def login():
 
             cursor.execute("""
                 INSERT INTO logs (email, action, login_time, status)
-                VALUES (%s, %s, %s, %s)
+                VALUES (?, ?, ?, ?)
             """, (
                 user['email'],
                 'LOGIN',
@@ -335,7 +335,7 @@ def questions():
 
     conn = get_db_connection()
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT year, semester, subject, unit, question
@@ -355,7 +355,7 @@ def get_subjects(semester):
 
     conn = get_db_connection()
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute(
     "SELECT DISTINCT name FROM subjects WHERE semester=?",
@@ -375,13 +375,13 @@ def get_units(subject):
 
     conn = get_db_connection()
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT DISTINCT u.name
     FROM units u
     JOIN subjects s ON u.subject_id = s.id
-    WHERE s.name=%s
+    WHERE s.name=?
 """, (subject,))
 
     units = cursor.fetchall()
@@ -404,7 +404,7 @@ def get_units(subject):
 def get_questions(subject, unit):
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     # Convert "Unit 1" -> "1"
     unit_number = unit.replace("Unit ", "").strip()
@@ -483,10 +483,10 @@ def logout():
 
         cursor.execute("""
             UPDATE logs
-            SET logout_time=%s,
-                action=%s,
-                status=%s
-            WHERE email=%s
+           SET logout_time=?,
+            action=?,
+            status=?
+            WHERE email=?
             AND status='ACTIVE'
             ORDER BY id DESC
             LIMIT 1
@@ -513,7 +513,7 @@ def logout():
 def logs():
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT *
@@ -533,7 +533,7 @@ def logs():
 def pending_questions():
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM pending_questions WHERE status='pending'")
     data = cursor.fetchall()
@@ -550,7 +550,7 @@ def pending_questions():
 def approve_question(id):
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM pending_questions WHERE id=%s", (id,))
     q = cursor.fetchone()
@@ -558,10 +558,10 @@ def approve_question(id):
     if q:
         cursor.execute("""
             INSERT INTO questions (year, semester, subject, unit, question)
-            VALUES (%s,%s,%s,%s,%s)
+            VALUES (?, ?, ?, ?)
         """, (q['year'], q['semester'], q['subject'], q['unit'], q['question']))
 
-        cursor.execute("UPDATE pending_questions SET status='approved' WHERE id=%s", (id,))
+        cursor.execute("UPDATE pending_questions SET status='approved' WHERE id=?", (id,))
 
     conn.commit()
     cursor.close()
