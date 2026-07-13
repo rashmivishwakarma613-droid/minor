@@ -107,8 +107,7 @@ def init_db():
     status VARCHAR(50)
 )
 """)
-
-
+# Pending Questions Table
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS pending_questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
