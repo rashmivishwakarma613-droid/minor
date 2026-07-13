@@ -186,7 +186,7 @@ def teacher_add_question():
     cursor.execute("""
         INSERT INTO pending_questions 
         (teacher_name, year, semester, subject, unit, question)
-        VALUES (?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
     """, (
         data['teacher_name'],
         data['year'],
