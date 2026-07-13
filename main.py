@@ -159,6 +159,33 @@ def seed_data():
                (sem, sub)
            ) 
 
+    for subject_name, units in SYLLABUS_DATA.items():
+
+    cursor.execute(
+        "SELECT id FROM subjects WHERE name=?",
+        (subject_name,)
+    )
+
+    subject = cursor.fetchone()
+
+    if subject:
+
+        subject_id = subject["id"]
+
+        for unit in units.keys():
+
+            cursor.execute(
+                "SELECT * FROM units WHERE subject_id=? AND name=?",
+                (subject_id, unit)
+            )
+
+            if not cursor.fetchone():
+
+                cursor.execute(
+                    "INSERT INTO units(subject_id, name) VALUES(?, ?)",
+                    (subject_id, unit)
+                )
+
     conn.commit()
 
     cursor.close()
