@@ -579,12 +579,17 @@ def approve_question(id):
     q = cursor.fetchone()
 
     if q:
-        cursor.execute("""
-            INSERT INTO questions (year, semester, subject, unit, question)
-            VALUES (?, ?, ?, ?)
-        """, (q['year'], q['semester'], q['subject'], q['unit'], q['question']))
-
-        cursor.execute("UPDATE pending_questions SET status='approved' WHERE id=?", (id,))
+       cursor.execute("""
+INSERT INTO questions (year, semester, subject, unit, question)
+VALUES (?, ?, ?, ?, ?)
+""",
+(
+    q["year"],
+    q["semester"],
+    q["subject"],
+    q["unit"],
+    q["question"]
+))
 
     conn.commit()
     cursor.close()
