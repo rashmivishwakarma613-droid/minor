@@ -212,10 +212,10 @@ def login():
         password = request.form['password']
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT * FROM users WHERE email=%s",
+            "SELECT * FROM users WHERE email=?",
             (email,)
         )
 
@@ -273,7 +273,7 @@ def register():
         cursor = conn.cursor()
 
         cursor.execute(
-           "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
+           "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
             (name, email, password)
             )
 
@@ -358,7 +358,7 @@ def get_subjects(semester):
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
-    "SELECT DISTINCT name FROM subjects WHERE semester=%s",
+    "SELECT DISTINCT name FROM subjects WHERE semester=?",
     (semester,)
 )
 
