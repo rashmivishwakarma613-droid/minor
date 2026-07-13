@@ -107,6 +107,22 @@ def init_db():
     status VARCHAR(50)
 )
 """)
+
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS pending_questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_name TEXT,
+    year INTEGER,
+    semester TEXT,
+    subject TEXT,
+    unit TEXT,
+    question TEXT,
+    status TEXT DEFAULT 'pending'
+)
+""")
+
+    
     conn.commit()
     cursor.close()
     conn.close()
@@ -413,11 +429,19 @@ def get_questions(subject, unit):
     print("Unit:", unit_number)
 
     cursor.execute("""
-    SELECT question, repeat_count
-    FROM questions
-    WHERE LOWER(subject)=LOWER(%s)
-    AND (LOWER(unit)=LOWER(%s) OR LOWER(unit)=LOWER(%s))
-""", (subject.strip(), unit, unit.replace("Unit ", "").strip()))
+SELECT question, repeat_count
+FROM questions
+WHERE LOWER(subject)=LOWER(?)
+AND (
+    LOWER(unit)=LOWER(?)
+    OR LOWER(unit)=LOWER(?)
+)
+""",
+(
+    subject.strip(),
+    unit,
+    unit_number
+))
 
     data = cursor.fetchall()
 
