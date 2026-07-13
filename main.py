@@ -140,9 +140,9 @@ def seed_data():
         if not subject:
 
             cursor.execute(
-                "INSERT INTO subjects (semester, name) VALUES (?, ?)"
-                (sem, sub)
-            )
+               "INSERT INTO subjects (semester, name) VALUES (?, ?)",
+               (sem, sub)
+           ) 
 
     conn.commit()
 
@@ -552,7 +552,7 @@ def approve_question(id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM pending_questions WHERE id=%s", (id,))
+    cursor.execute("SELECT * FROM pending_questions WHERE id=?", (id,))
     q = cursor.fetchone()
 
     if q:
@@ -581,10 +581,10 @@ def leave():
 
         cursor.execute("""
             UPDATE logs
-            SET logout_time=%s,
-                action=%s,
-                status=%s
-            WHERE email=%s
+            SET logout_time=?,
+                action=?,
+                status=?
+            WHERE email=?
             AND status='ACTIVE'
             ORDER BY id DESC
             LIMIT 1
