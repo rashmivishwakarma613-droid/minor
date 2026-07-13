@@ -58,9 +58,9 @@ def init_db():
     # USERS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100),
-        email VARCHAR(100) UNIQUE,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR(255),
+        email VARCHAR(255) UNIQUE,
         password TEXT
     )
     """)
@@ -68,29 +68,29 @@ def init_db():
     # SUBJECTS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS subjects (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         semester VARCHAR(20),
-        name VARCHAR(100)
+        name VARCHAR(255)
     )
     """)
 
     # UNITS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS units (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         subject_id INT,
-        name VARCHAR(100)
+        name VARCHAR(255)
     )
     """)
 
     # QUESTIONS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS questions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     year INT,
     semester VARCHAR(20),
-    subject VARCHAR(100),
-    unit VARCHAR(100),
+    subject VARCHAR(255),
+    unit VARCHAR(255),
     question TEXT,
     repeat_count INT DEFAULT 1
                    )
@@ -99,7 +99,7 @@ def init_db():
      # LOGS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     email VARCHAR(255),
     action VARCHAR(50),
     login_time DATETIME,
