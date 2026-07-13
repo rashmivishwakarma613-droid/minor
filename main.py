@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, session, send_from_directory
 import os
-import mysql.connector
+import sqlite3
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,17 +14,10 @@ ADMIN_EMAIL = "rashmivishwakarma613@gmail.com"
 # ---------------- DATABASE ---------------- #
 
 def get_db_connection():
-    conn = mysql.connector.connect(
-        host=os.getenv("MYSQLHOST"),
-        user=os.getenv("MYSQLUSER"),
-        password=os.getenv("MYSQLPASSWORD"),
-        database=os.getenv("MYSQLDATABASE"),
-        port=int(os.getenv("MYSQLPORT")),
-        connection_timeout=20,
-        ssl_disabled=False
-    )
-
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
     return conn
+
 
 SYLLABUS_DATA = {
     "Machine Learning": {
