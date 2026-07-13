@@ -131,7 +131,7 @@ def seed_data():
     for sem, sub in subjects:
 
         cursor.execute(
-            "SELECT * FROM subjects WHERE name=%s",
+            "SELECT * FROM subjects WHERE name=?",
             (sub,)
         )
 
@@ -140,7 +140,7 @@ def seed_data():
         if not subject:
 
             cursor.execute(
-                "INSERT INTO subjects (semester, name) VALUES (%s, %s)",
+                "INSERT INTO subjects (semester, name) VALUES ?, ?)",
                 (sem, sub)
             )
 
