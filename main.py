@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, session, send_from_directory
 import os
-import sqlite3
+import mysql.connector
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,10 +14,15 @@ ADMIN_EMAIL = "rashmivishwakarma613@gmail.com"
 # ---------------- DATABASE ---------------- #
 
 def get_db_connection():
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+    conn = mysql.connector.connect(
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=int(os.getenv("MYSQLPORT"))
+    )
 
+    return conn
 
 SYLLABUS_DATA = {
     "Machine Learning": {
@@ -58,9 +63,9 @@ def init_db():
     # USERS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR(255),
-        email VARCHAR(255) UNIQUE,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100) UNIQUE,
         password TEXT
     )
     """)
@@ -68,29 +73,29 @@ def init_db():
     # SUBJECTS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS subjects (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         semester VARCHAR(20),
-        name VARCHAR(255)
+        name VARCHAR(100)
     )
     """)
 
     # UNITS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS units (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         subject_id INT,
-        name VARCHAR(255)
+        name VARCHAR(100)
     )
     """)
 
     # QUESTIONS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS questions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     year INT,
     semester VARCHAR(20),
-    subject VARCHAR(255),
-    unit VARCHAR(255),
+    subject VARCHAR(100),
+    unit VARCHAR(100),
     question TEXT,
     repeat_count INT DEFAULT 1
                    )
@@ -99,7 +104,7 @@ def init_db():
      # LOGS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255),
     action VARCHAR(50),
     login_time DATETIME,
@@ -107,21 +112,6 @@ def init_db():
     status VARCHAR(50)
 )
 """)
-# Pending Questions Table
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS pending_questions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    teacher_name TEXT,
-    year INTEGER,
-    semester TEXT,
-    subject TEXT,
-    unit TEXT,
-    question TEXT,
-    status TEXT DEFAULT 'pending'
-)
-""")
-
-    
     conn.commit()
     cursor.close()
     conn.close()
@@ -146,7 +136,7 @@ def seed_data():
     for sem, sub in subjects:
 
         cursor.execute(
-            "SELECT * FROM subjects WHERE name=?",
+            "SELECT * FROM subjects WHERE name=%s",
             (sub,)
         )
 
@@ -155,36 +145,9 @@ def seed_data():
         if not subject:
 
             cursor.execute(
-               "INSERT INTO subjects (semester, name) VALUES (?, ?)",
-               (sem, sub)
-           ) 
-
-    for subject_name, units in SYLLABUS_DATA.items():
-
-    cursor.execute(
-        "SELECT id FROM subjects WHERE name=?",
-        (subject_name,)
-    )
-
-    subject = cursor.fetchone()
-
-    if subject:
-
-        subject_id = subject["id"]
-
-        for unit in units.keys():
-
-            cursor.execute(
-                "SELECT * FROM units WHERE subject_id=? AND name=?",
-                (subject_id, unit)
+                "INSERT INTO subjects (semester, name) VALUES (%s, %s)",
+                (sem, sub)
             )
-
-            if not cursor.fetchone():
-
-                cursor.execute(
-                    "INSERT INTO units(subject_id, name) VALUES(?, ?)",
-                    (subject_id, unit)
-                )
 
     conn.commit()
 
@@ -228,7 +191,7 @@ def teacher_add_question():
     cursor.execute("""
         INSERT INTO pending_questions 
         (teacher_name, year, semester, subject, unit, question)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s,%s,%s,%s,%s,%s)
     """, (
         data['teacher_name'],
         data['year'],
@@ -254,10 +217,10 @@ def login():
         password = request.form['password']
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
         cursor.execute(
-            "SELECT * FROM users WHERE email=?",
+            "SELECT * FROM users WHERE email=%s",
             (email,)
         )
 
@@ -276,7 +239,7 @@ def login():
 
             cursor.execute("""
                 INSERT INTO logs (email, action, login_time, status)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             """, (
                 user['email'],
                 'LOGIN',
@@ -315,7 +278,7 @@ def register():
         cursor = conn.cursor()
 
         cursor.execute(
-           "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+           "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
             (name, email, password)
             )
 
@@ -377,7 +340,7 @@ def questions():
 
     conn = get_db_connection()
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
         SELECT year, semester, subject, unit, question
@@ -397,10 +360,10 @@ def get_subjects(semester):
 
     conn = get_db_connection()
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
-    "SELECT DISTINCT name FROM subjects WHERE semester=?",
+    "SELECT DISTINCT name FROM subjects WHERE semester=%s",
     (semester,)
 )
 
@@ -417,13 +380,13 @@ def get_units(subject):
 
     conn = get_db_connection()
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
     SELECT DISTINCT u.name
     FROM units u
     JOIN subjects s ON u.subject_id = s.id
-    WHERE s.name=?
+    WHERE s.name=%s
 """, (subject,))
 
     units = cursor.fetchall()
@@ -446,7 +409,7 @@ def get_units(subject):
 def get_questions(subject, unit):
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     # Convert "Unit 1" -> "1"
     unit_number = unit.replace("Unit ", "").strip()
@@ -455,19 +418,11 @@ def get_questions(subject, unit):
     print("Unit:", unit_number)
 
     cursor.execute("""
-SELECT question, repeat_count
-FROM questions
-WHERE LOWER(subject)=LOWER(?)
-AND (
-    LOWER(unit)=LOWER(?)
-    OR LOWER(unit)=LOWER(?)
-)
-""",
-(
-    subject.strip(),
-    unit,
-    unit_number
-))
+    SELECT question, repeat_count
+    FROM questions
+    WHERE LOWER(subject)=LOWER(%s)
+    AND (LOWER(unit)=LOWER(%s) OR LOWER(unit)=LOWER(%s))
+""", (subject.strip(), unit, unit.replace("Unit ", "").strip()))
 
     data = cursor.fetchall()
 
@@ -533,10 +488,10 @@ def logout():
 
         cursor.execute("""
             UPDATE logs
-           SET logout_time=?,
-            action=?,
-            status=?
-            WHERE email=?
+            SET logout_time=%s,
+                action=%s,
+                status=%s
+            WHERE email=%s
             AND status='ACTIVE'
             ORDER BY id DESC
             LIMIT 1
@@ -563,7 +518,7 @@ def logout():
 def logs():
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
         SELECT *
@@ -583,7 +538,7 @@ def logs():
 def pending_questions():
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute("SELECT * FROM pending_questions WHERE status='pending'")
     data = cursor.fetchall()
@@ -600,23 +555,18 @@ def pending_questions():
 def approve_question(id):
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM pending_questions WHERE id=?", (id,))
+    cursor.execute("SELECT * FROM pending_questions WHERE id=%s", (id,))
     q = cursor.fetchone()
 
     if q:
-       cursor.execute("""
-INSERT INTO questions (year, semester, subject, unit, question)
-VALUES (?, ?, ?, ?, ?)
-""",
-(
-    q["year"],
-    q["semester"],
-    q["subject"],
-    q["unit"],
-    q["question"]
-))
+        cursor.execute("""
+            INSERT INTO questions (year, semester, subject, unit, question)
+            VALUES (%s,%s,%s,%s,%s)
+        """, (q['year'], q['semester'], q['subject'], q['unit'], q['question']))
+
+        cursor.execute("UPDATE pending_questions SET status='approved' WHERE id=%s", (id,))
 
     conn.commit()
     cursor.close()
@@ -636,10 +586,10 @@ def leave():
 
         cursor.execute("""
             UPDATE logs
-            SET logout_time=?,
-                action=?,
-                status=?
-            WHERE email=?
+            SET logout_time=%s,
+                action=%s,
+                status=%s
+            WHERE email=%s
             AND status='ACTIVE'
             ORDER BY id DESC
             LIMIT 1
