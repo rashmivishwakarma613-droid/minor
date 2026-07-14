@@ -13,15 +13,11 @@ ADMIN_EMAIL = "rashmivishwakarma613@gmail.com"
 
 # ---------------- DATABASE ---------------- #
 
-def get_db_connection():
-    conn = mysql.connector.connect(
-        host=os.getenv("MYSQLHOST"),
-        user=os.getenv("MYSQLUSER"),
-        password=os.getenv("MYSQLPASSWORD"),
-        database=os.getenv("MYSQLDATABASE"),
-        port=int(os.getenv("MYSQLPORT"))
-    )
+import sqlite3
 
+def get_db_connection():
+    conn = sqlite3.connect("rgpv_data.db")
+    conn.row_factory = sqlite3.Row
     return conn
 
 SYLLABUS_DATA = {
