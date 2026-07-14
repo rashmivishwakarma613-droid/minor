@@ -132,7 +132,7 @@ def seed_data():
     for sem, sub in subjects:
 
         cursor.execute(
-            "SELECT * FROM subjects WHERE name=%s",
+            "SELECT * FROM subjects WHERE name=?",
             (sub,)
         )
 
@@ -141,7 +141,7 @@ def seed_data():
         if not subject:
 
             cursor.execute(
-                "INSERT INTO subjects (semester, name) VALUES (%s, %s)",
+                "INSERT INTO subjects (semester, name) VALUES (?, ?)",
                 (sem, sub)
             )
 
@@ -187,7 +187,7 @@ def teacher_add_question():
     cursor.execute("""
         INSERT INTO pending_questions 
         (teacher_name, year, semester, subject, unit, question)
-        VALUES (%s,%s,%s,%s,%s,%s)
+        VALUES (?,?,?,?,?,?)
     """, (
         data['teacher_name'],
         data['year'],
@@ -216,7 +216,7 @@ def login():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute(
-            "SELECT * FROM users WHERE email=%s",
+            "SELECT * FROM users WHERE email=?",
             (email,)
         )
 
@@ -235,7 +235,7 @@ def login():
 
             cursor.execute("""
                 INSERT INTO logs (email, action, login_time, status)
-                VALUES (%s, %s, %s, %s)
+                VALUES (?,?,?,?)
             """, (
                 user['email'],
                 'LOGIN',
@@ -274,7 +274,7 @@ def register():
         cursor = conn.cursor()
 
         cursor.execute(
-           "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
+           "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
             (name, email, password)
             )
 
@@ -359,7 +359,7 @@ def get_subjects(semester):
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
-    "SELECT DISTINCT name FROM subjects WHERE semester=%s",
+    "SELECT DISTINCT name FROM subjects WHERE semester=?",
     (semester,)
 )
 
@@ -382,7 +382,7 @@ def get_units(subject):
     SELECT DISTINCT u.name
     FROM units u
     JOIN subjects s ON u.subject_id = s.id
-    WHERE s.name=%s
+    WHERE s.name=?
 """, (subject,))
 
     units = cursor.fetchall()
@@ -416,8 +416,8 @@ def get_questions(subject, unit):
     cursor.execute("""
     SELECT question, repeat_count
     FROM questions
-    WHERE LOWER(subject)=LOWER(%s)
-    AND (LOWER(unit)=LOWER(%s) OR LOWER(unit)=LOWER(%s))
+    WHERE LOWER(subject)=LOWER(?)
+    AND (LOWER(unit)=LOWER(?) OR LOWER(unit)=LOWER(?))
 """, (subject.strip(), unit, unit.replace("Unit ", "").strip()))
 
     data = cursor.fetchall()
@@ -484,10 +484,10 @@ def logout():
 
         cursor.execute("""
             UPDATE logs
-            SET logout_time=%s,
-                action=%s,
-                status=%s
-            WHERE email=%s
+            SET logout_time=?,
+                action=?,
+                status=?
+            WHERE email=?
             AND status='ACTIVE'
             ORDER BY id DESC
             LIMIT 1
@@ -553,16 +553,16 @@ def approve_question(id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM pending_questions WHERE id=%s", (id,))
+    cursor.execute("SELECT * FROM pending_questions WHERE id=?", (id,))
     q = cursor.fetchone()
 
     if q:
         cursor.execute("""
             INSERT INTO questions (year, semester, subject, unit, question)
-            VALUES (%s,%s,%s,%s,%s)
+            VALUES (?,?,?,?,?)
         """, (q['year'], q['semester'], q['subject'], q['unit'], q['question']))
 
-        cursor.execute("UPDATE pending_questions SET status='approved' WHERE id=%s", (id,))
+        cursor.execute("UPDATE pending_questions SET status='approved' WHERE id=?", (id,))
 
     conn.commit()
     cursor.close()
@@ -582,10 +582,10 @@ def leave():
 
         cursor.execute("""
             UPDATE logs
-            SET logout_time=%s,
-                action=%s,
-                status=%s
-            WHERE email=%s
+            SET logout_time=?,
+                action=?,
+                status=?
+            WHERE email=?
             AND status='ACTIVE'
             ORDER BY id DESC
             LIMIT 1
