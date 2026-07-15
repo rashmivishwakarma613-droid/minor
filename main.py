@@ -347,7 +347,7 @@ def questions():
 
     conn = get_db_connection()
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT year, semester, subject, unit, question
@@ -367,7 +367,7 @@ def get_subjects(semester):
 
     conn = get_db_connection()
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute(
     "SELECT DISTINCT name FROM subjects WHERE semester=?",
@@ -387,7 +387,7 @@ def get_units(subject):
 
     conn = get_db_connection()
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
     SELECT DISTINCT u.name
@@ -416,7 +416,7 @@ def get_units(subject):
 def get_questions(subject, unit):
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     # Convert "Unit 1" -> "1"
     unit_number = unit.replace("Unit ", "").strip()
@@ -525,7 +525,7 @@ def logout():
 def logs():
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT *
@@ -545,7 +545,7 @@ def logs():
 def pending_questions():
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM pending_questions WHERE status='pending'")
     data = cursor.fetchall()
@@ -562,7 +562,7 @@ def pending_questions():
 def approve_question(id):
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM pending_questions WHERE id=?", (id,))
     q = cursor.fetchone()
