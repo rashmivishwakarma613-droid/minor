@@ -1,3 +1,4 @@
+
 import sqlite3
 import pandas as pd
 import os
@@ -12,14 +13,14 @@ def create_db_from_excel():
     cursor = conn.cursor()
 
     # Tables Create Karein
-cursor.execute("""
+    cursor.execute("""
 CREATE TABLE semesters (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT
 )
 """)
 
-cursor.execute("""
+    cursor.execute("""
 CREATE TABLE subjects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
@@ -27,7 +28,7 @@ CREATE TABLE subjects (
 )
 """)
 
-cursor.execute("""
+    cursor.execute("""
 CREATE TABLE units (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
@@ -35,7 +36,7 @@ CREATE TABLE units (
 )
 """)
 
-cursor.execute("""
+    cursor.execute("""
 CREATE TABLE questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     question TEXT,
@@ -46,7 +47,7 @@ CREATE TABLE questions (
 """)
 
 # users table (main.py ke according)
-cursor.execute("""
+    cursor.execute("""
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -56,7 +57,7 @@ CREATE TABLE users (
 """)
 
 # logs table (main.py ke according)
-cursor.execute("""
+    cursor.execute("""
 CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT,
@@ -66,7 +67,7 @@ CREATE TABLE logs (
 )
 """)
 
-cursor.execute("""
+    cursor.execute("""
 CREATE TABLE pending_questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     semester TEXT,
