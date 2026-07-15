@@ -1,5 +1,7 @@
-flask
+Flask
 gunicorn
 python-dotenv
-werkzeug
+Werkzeug
 mysql-connector-python
+pandas
+openpyxl
