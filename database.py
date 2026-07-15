@@ -12,13 +12,72 @@ def create_db_from_excel():
     cursor = conn.cursor()
 
     # Tables Create Karein
-    cursor.execute("CREATE TABLE semesters (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)")
-    cursor.execute("CREATE TABLE subjects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, semester_id INTEGER)")
-    cursor.execute("CREATE TABLE units (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, subject_id INTEGER)")
-    cursor.execute("CREATE TABLE questions (id INTEGER PRIMARY KEY AUTOINCREMENT, question TEXT, answer TEXT, unit_id INTEGER, year INTEGER)")
-    cursor.execute("""CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,role TEXT DEFAULT 'student')""")
-    cursor.execute("""CREATE TABLE logs (id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT,action TEXT,login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
-    cursor.execute("""CREATE TABLE pending_questions (id INTEGER PRIMARY KEY AUTOINCREMENT,semester TEXT,subject TEXT,unit TEXT,question TEXT,answer TEXT,year INTEGER,status TEXT DEFAULT 'Pending')""")
+cursor.execute("""
+CREATE TABLE semesters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT
+)
+""")
+
+cursor.execute("""
+CREATE TABLE subjects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    semester_id INTEGER
+)
+""")
+
+cursor.execute("""
+CREATE TABLE units (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    subject_id INTEGER
+)
+""")
+
+cursor.execute("""
+CREATE TABLE questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    question TEXT,
+    answer TEXT,
+    unit_id INTEGER,
+    year INTEGER
+)
+""")
+
+# users table (main.py ke according)
+cursor.execute("""
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+)
+""")
+
+# logs table (main.py ke according)
+cursor.execute("""
+CREATE TABLE logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT,
+    action TEXT,
+    login_time TIMESTAMP,
+    status TEXT
+)
+""")
+
+cursor.execute("""
+CREATE TABLE pending_questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    semester TEXT,
+    subject TEXT,
+    unit TEXT,
+    question TEXT,
+    answer TEXT,
+    year INTEGER,
+    status TEXT DEFAULT 'Pending'
+)
+""")
     # Excel Load Karein
     df = pd.read_excel("data.xlsx")
     df.columns = [c.strip().lower() for c in df.columns]
