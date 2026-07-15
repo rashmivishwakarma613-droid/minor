@@ -174,8 +174,8 @@ def auto_assign_unit(subject, question_text):
 
 # ---------------- INITIALIZE DB ---------------- #
 
-init_db()
-seed_data()
+# init_db()
+# seed_data()
 
 # ---------------- ROUTES ---------------- #
 
