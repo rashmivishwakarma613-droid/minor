@@ -366,48 +366,22 @@ def questions():
 def get_subjects(semester):
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
-    cursor.execute(
-    "SELECT DISTINCT name FROM subjects WHERE semester=?",
-    (semester,)
-)
+    cursor.execute("""
+        SELECT s.name
+        FROM subjects s
+        JOIN semesters sem
+        ON s.semester_id = sem.id
+        WHERE sem.name = ?
+    """, (semester,))
 
     subjects = cursor.fetchall()
 
     cursor.close()
-
     conn.close()
 
     return jsonify([row["name"] for row in subjects])
-
-@app.route('/api/units/<subject>')
-def get_units(subject):
-
-    conn = get_db_connection()
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT DISTINCT u.name
-    FROM units u
-    JOIN subjects s ON u.subject_id = s.id
-    WHERE s.name=?
-""", (subject,))
-
-    units = cursor.fetchall()
-
-    cursor.close()
-
-    conn.close()
-
-    unit_names = [row["name"] for row in units]
-
-    if not unit_names and subject in SYLLABUS_DATA:
-        return jsonify(list(SYLLABUS_DATA[subject].keys()))
-
-    return jsonify(unit_names)
 
 
 
