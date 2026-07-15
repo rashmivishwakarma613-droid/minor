@@ -51,104 +51,115 @@ SYLLABUS_DATA = {
     }
 }
 
-def init_db():
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
 
-    # USERS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100),
-        email VARCHAR(100) UNIQUE,
-        password TEXT
-    )
-    """)
 
-    # SUBJECTS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS subjects (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        semester VARCHAR(20),
-        name VARCHAR(100)
-    )
-    """)
 
-    # UNITS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS units (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        subject_id INT,
-        name VARCHAR(100)
-    )
-    """)
 
-    # QUESTIONS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS questions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    year INT,
-    semester VARCHAR(20),
-    subject VARCHAR(100),
-    unit VARCHAR(100),
-    question TEXT,
-    repeat_count INT DEFAULT 1
-                   )
-""")
+# def init_db():
+
+#     conn = get_db_connection()
+#     cursor = conn.cursor()
+
+#     # USERS TABLE
+#     cursor.execute("""
+#     CREATE TABLE IF NOT EXISTS users (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         name VARCHAR(100),
+#         email VARCHAR(100) UNIQUE,
+#         password TEXT
+#     )
+#     """)
+
+#     # SUBJECTS TABLE
+#     cursor.execute("""
+#     CREATE TABLE IF NOT EXISTS subjects (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         semester VARCHAR(20),
+#         name VARCHAR(100)
+#     )
+#     """)
+
+#     # UNITS TABLE
+#     cursor.execute("""
+#     CREATE TABLE IF NOT EXISTS units (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         subject_id INT,
+#         name VARCHAR(100)
+#     )
+#     """)
+
+#     # QUESTIONS TABLE
+#     cursor.execute("""
+#     CREATE TABLE IF NOT EXISTS questions (
+#     id INT AUTO_INCREMENT PRIMARY KEY,
+#     year INT,
+#     semester VARCHAR(20),
+#     subject VARCHAR(100),
+#     unit VARCHAR(100),
+#     question TEXT,
+#     repeat_count INT DEFAULT 1
+#                    )
+# """)
     
-     # LOGS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255),
-    action VARCHAR(50),
-    login_time DATETIME,
-    logout_time DATETIME,
-    status VARCHAR(50)
-)
-""")
-    conn.commit()
-    cursor.close()
-    conn.close()
+#      # LOGS TABLE
+#     cursor.execute("""
+#     CREATE TABLE IF NOT EXISTS logs (
+#     id INT AUTO_INCREMENT PRIMARY KEY,
+#     email VARCHAR(255),
+#     action VARCHAR(50),
+#     login_time DATETIME,
+#     logout_time DATETIME,
+#     status VARCHAR(50)
+# )
+# """)
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
 
 
  
 
 
-def seed_data():
+# def seed_data():
 
-    conn = get_db_connection()
+#     conn = get_db_connection()
 
-    cursor = conn.cursor()
+#     cursor = conn.cursor()
 
-    subjects = [
-        ("Semester 6", "Machine Learning"),
-        ("Semester 6", "Computer Network"),
-        ("Semester 6", "Compiler Design"),
-        ("Semester 6", "Project Management")
-    ]
+#     subjects = [
+#         ("Semester 6", "Machine Learning"),
+#         ("Semester 6", "Computer Network"),
+#         ("Semester 6", "Compiler Design"),
+#         ("Semester 6", "Project Management")
+#     ]
 
-    for sem, sub in subjects:
+#     for sem, sub in subjects:
 
-        cursor.execute(
-            "SELECT * FROM subjects WHERE name=?",
-            (sub,)
-        )
+#         cursor.execute(
+#             "SELECT * FROM subjects WHERE name=?",
+#             (sub,)
+#         )
 
-        subject = cursor.fetchone()
+#         subject = cursor.fetchone()
 
-        if not subject:
+#         if not subject:
 
-            cursor.execute(
-                "INSERT INTO subjects (semester, name) VALUES (?, ?)",
-                (sem, sub)
-            )
+#             cursor.execute(
+#                 "INSERT INTO subjects (semester, name) VALUES (?, ?)",
+#                 (sem, sub)
+#             )
 
-    conn.commit()
+#     conn.commit()
 
-    cursor.close()
-    conn.close()
+#     cursor.close()
+#     conn.close()
+
+
+
+
+
+
 # ---------------- SMART UNIT FINDER ---------------- #
 # LOGS TABLE
 def auto_assign_unit(subject, question_text):
